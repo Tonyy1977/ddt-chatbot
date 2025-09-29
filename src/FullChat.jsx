@@ -116,10 +116,7 @@ export default function FullChat() {
                 sender: msg.sender,
                 text: String(msg.text),
                 type: "text",
-                timestamp: new Date(msg.timestamp).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
+                timestamp: msg.timestamp,
               }))
             : [
                 {
@@ -152,10 +149,7 @@ export default function FullChat() {
     const full = {
       ...msg,
       type: msg.type || "text",
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      timestamp: new Date().toISOString(),
     };
     setMessages((p) => [...p, full]);
     setMenuStep(0);
@@ -321,7 +315,15 @@ FAQs: ${JSON.stringify(qaData)}
   />
 )}
 
-                    <span className="timestamp">{m.timestamp}</span>
+                    <span className="timestamp">
+  {m.timestamp
+    ? new Date(m.timestamp).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : ""}
+</span>
+
                   </div>
                 </div>
               );
