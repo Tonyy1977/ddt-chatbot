@@ -1,10 +1,6 @@
-// api/tidycal.js — Vercel serverless version of TidyCal scheduling logic
+// api/suggest.js — Vercel serverless version of TidyCal scheduling logic (dynamic filtering)
 
 const SLOT_RULES = {
-  types: {
-    tour:    { stepMins: 15, url: "https://tidycal.com/ddtenterpriseusa/15-minute-meeting" },
-    meeting: { stepMins: 30, url: "https://tidycal.com/ddtenterpriseusa/30-minute-meeting" },
-  },
   workingWindows: {
     3: [{ start: { h: 17, m: 0 }, end: { h: 20, m: 0 } }], // Wednesday 5–8pm
     6: [{ start: { h: 11, m: 0 }, end: { h: 13, m: 0 } }], // Saturday 11–1pm
@@ -69,9 +65,9 @@ async function getAllBookingsJSON() {
   return data?.data || [];
 }
 
-function buildCandidateWindows(dateObj, typeKey, preference) {
+// ---------------- slot builders ----------------
+function buildCandidateWindows(dateObj, stepMins, preference) {
   const all = windowsForDate(dateObj);
-  const stepMins = SLOT_RULES.types[typeKey].stepMins;
   if (!all.length) return [];
   const cand = [];
   for (const w of all) {
@@ -93,8 +89,8 @@ function buildCandidateWindows(dateObj, typeKey, preference) {
   return cand;
 }
 
-function findSlotsForDay({ dateObj, typeKey, preference, bookings, afterISO, count = 1, strategy = "first" }) {
-  const windows = buildCandidateWindows(dateObj, typeKey, preference);
+function findSlotsForDay({ dateObj, stepMins, preference, bookings, afterISO, count = 1, strategy = "first" }) {
+  const windows = buildCandidateWindows(dateObj, stepMins, preference);
   if (!windows.length) return { slots: [], hadWindows: false };
   const now = new Date();
   const isToday = isSameDay(now, dateObj);
@@ -135,10 +131,10 @@ function findSlotsForDay({ dateObj, typeKey, preference, bookings, afterISO, cou
   };
 }
 
-function findNextAvailableForward({ startDateObj, typeKey, preference, bookings, afterISO, count = 3 }) {
+function findNextAvailableForward({ startDateObj, stepMins, preference, bookings, afterISO, count = 3 }) {
   for (let i = 0; i < 60; i++) {
     const dateObj = addDays(startDateObj, i);
-    const res = findSlotsForDay({ dateObj, typeKey, preference, bookings, afterISO, count });
+    const res = findSlotsForDay({ dateObj, stepMins, preference, bookings, afterISO, count });
     if (res.slots.length) {
       return { dateYMD: ymd(dateObj), options: res.slots };
     }
@@ -146,62 +142,77 @@ function findNextAvailableForward({ startDateObj, typeKey, preference, bookings,
   return null;
 }
 
+// ---------------- handler ----------------
 export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
   try {
-    const apiKey = process.env.TIDYCAL_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: "Missing TidyCal API key" });
-
-    const type = String(req.query.type || "meeting").toLowerCase();
+    const type = String(req.query.type || "").toLowerCase();       // "tour" or "meeting"
     const preference = String(req.query.preference || "").toLowerCase();
     const dateStr = String(req.query.date || ymd(new Date()));
     const afterISO = req.query.after ? String(req.query.after) : "";
     const count = Math.max(1, Math.min(5, Number(req.query.count) || 1));
     const strategy = String(req.query.strategy || "first").toLowerCase();
 
-    if (!SLOT_RULES.types[type]) {
-      return res.status(400).json({ error: "Invalid booking type" });
+    // fetch all booking types dynamically
+    const allBookings = await getAllBookingsJSON();
+
+    // filter bookings dynamically
+    let selectedBookings = allBookings;
+    let stepMins = 30; // default
+    let bookingUrl = "";
+
+    if (type === "tour") {
+      selectedBookings = allBookings.filter(b => /home tour/i.test(b.name));
+      stepMins = 15;
+      bookingUrl = selectedBookings[0]?.url || "";
+    } else if (type === "meeting") {
+      selectedBookings = allBookings.filter(b => /meeting/i.test(b.name));
+      stepMins = 30;
+      bookingUrl = selectedBookings[0]?.url || "";
     }
 
     const dateObj = parseYMD(dateStr);
-    const bookings = await getAllBookingsJSON();
     const windows = windowsForDate(dateObj);
 
     if (!windows.length) {
       const next = findNextAvailableForward({
-        startDateObj: addDays(dateObj, 1), typeKey: type, preference, bookings, afterISO,
+        startDateObj: addDays(dateObj, 1), stepMins, preference,
+        bookings: selectedBookings, afterISO,
       });
       return res.status(403).json({
         error: "Closed day", closedDay: true, policy: POLICY_SUMMARY,
         type, preference, dateYMD: ymd(dateObj),
-        bookingUrl: SLOT_RULES.types[type].url,
-        nextAvailable: next,
+        bookingUrl, nextAvailable: next,
       });
     }
 
-    const { slots, hadWindows } = findSlotsForDay({ dateObj, typeKey: type, preference, bookings, afterISO, count, strategy });
+    const { slots, hadWindows } = findSlotsForDay({
+      dateObj, stepMins, preference, bookings: selectedBookings, afterISO, count, strategy
+    });
+
     if (!slots.length) {
       const next = findNextAvailableForward({
-        startDateObj: addDays(dateObj, 1), typeKey: type, preference, bookings, afterISO,
+        startDateObj: addDays(dateObj, 1), stepMins, preference,
+        bookings: selectedBookings, afterISO,
       });
       return res.status(404).json({
         error: hadWindows ? "Fully booked" : "Closed day", fullyBooked: hadWindows,
         closedDay: !hadWindows, policy: POLICY_SUMMARY,
         type, preference, dateYMD: ymd(dateObj),
-        bookingUrl: SLOT_RULES.types[type].url,
-        nextAvailable: next,
+        bookingUrl, nextAvailable: next,
       });
     }
 
     const primary = slots[0];
     return res.status(200).json({
       type, preference, dateYMD: ymd(dateObj),
-      bookingUrl: SLOT_RULES.types[type].url,
-      options: slots, start: primary.start, end: primary.end,
+      bookingUrl,
+      options: slots,
+      start: primary.start, end: primary.end,
       human: primary.human, policy: POLICY_SUMMARY,
     });
   } catch (err) {
-    console.error("❌ /api/tidycal error:", err);
+    console.error("❌ /api/suggest error:", err);
     return res.status(500).json({ error: "Failed to suggest a time" });
   }
 }

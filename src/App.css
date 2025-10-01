@@ -405,7 +405,7 @@ max-width: 75%;
   border-radius: 999px; /* pill shape */
   text-align: center;
   cursor: pointer;
-  font-size: clamp(8px, 2.5vw, 14px);
+  font-size: 10px;
   width: fit-content;         /* <- fits text */
   max-width: 100%;
   transition: background-color 0.2s ease, color 0.2s ease;
