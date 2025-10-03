@@ -118,7 +118,7 @@ export default function FullChat() {
         sender: msg.sender,
         text: String(msg.text),
         type: "text",
-        timestamp: msg.timestamp ? new Date(msg.timestamp) : null, // normalize
+        timestamp: msg.timestamp ? new Date(msg.timestamp) : null,
       }))
     : [
         {
@@ -369,12 +369,15 @@ addMessage({
     )}
 
     <span className="timestamp">
-  {m.timestamp instanceof Date && !isNaN(m.timestamp)
-    ? m.timestamp.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : ""}
+  {(() => {
+    try {
+      const d = new Date(m.timestamp);
+      if (isNaN(d.getTime())) return "";   // invalid date, show nothing
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  })()}
 </span>
   </div>
 )}
