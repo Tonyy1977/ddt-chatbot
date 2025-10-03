@@ -1,5 +1,5 @@
 import dbConnect from '../../lib/dbConnect.js';
-import Message from '../../models/Message.js';
+import Message from '../../models/message.js';
 
 export default async function handler(req, res) {
   await dbConnect();
@@ -18,17 +18,17 @@ export default async function handler(req, res) {
   }
 
   else if (req.method === 'GET') {
-    const { sessionId } = req.query;
-    console.log("📥 Loading history for:", sessionId);
+  const { sessionId } = req.query;
+  console.log("📥 Loading history for:", sessionId);
 
-    try {
-      const messages = await Message.find({ sessionId }).sort({ timestamp: 1 });
-      res.status(200).json(messages);
-    } catch (err) {
-      console.error('❌ Error fetching history:', err.stack); // show full stack trace
-      res.status(500).json({ success: false, error: err.message }); // send real error to frontend
-    }
+  try {
+    const messages = await Message.find({ sessionId }).sort({ createdAt: 1 });
+    res.status(200).json(messages);
+  } catch (err) {
+    console.error('❌ Error fetching history:', err.stack);
+    res.status(500).json({ success: false, error: err.message });
   }
+}
 
   else {
     res.status(405).json({ success: false, error: 'Method not allowed' });

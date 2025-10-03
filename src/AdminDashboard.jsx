@@ -88,7 +88,7 @@ setFiltered(messages);
       const start = new Date(startDate);
       const end = new Date(endDate);
       filteredData = filteredData.filter(msg => {
-        const msgDate = new Date(msg.timestamp);
+        const msgDate = msg.createdAt ? new Date(msg.createdAt) : null;
         return msgDate >= start && msgDate <= end;
       });
     }
@@ -101,12 +101,12 @@ setFiltered(messages);
 
   messages.forEach(msg => {
     rows.push([
-      msg.sessionId || '',
-      msg.sender || '',
-      `"${msg.text?.toString().replace(/"/g, '""') || ''}"`,
-      msg.timestamp || '',
-      msg.topic || ''
-    ]);
+  msg.sessionId || '',
+  msg.sender || '',
+  `"${msg.text?.toString().replace(/"/g, '""') || ''}"`,
+  msgDate ? msgDate.toISOString() : '',
+  msg.topic || ''
+]);
   });
 
   const csvContent = rows.map(row => row.join(',')).join('\n');
@@ -251,7 +251,7 @@ if (!authenticated) {
               <td>{msg.sessionId}</td>
               <td style={{ fontWeight: 'bold' }}>{msg.sender === 'bot' ? 'Bot' : 'User'}</td>
               <td style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.text}</td>
-              <td>{new Date(msg.timestamp).toLocaleString()}</td>
+              <td>{new Date(msg.createdAt).toLocaleString()}</td>
             </tr>
           ))}
         </tbody>

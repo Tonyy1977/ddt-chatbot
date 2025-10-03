@@ -118,16 +118,14 @@ export default function FullChat() {
         sender: msg.sender,
         text: String(msg.text),
         type: "text",
-        timestamp: msg.timestamp
-  ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  : '',
+        timestamp: msg.createdAt ? new Date(msg.createdAt).toISOString() : null,
       }))
     : [
         {
           sender: "bot",
           text: "Hi, I'm Micah, DDT's virtual assistant. How can I help you today?",
           type: "text",
-          timestamp: new Date(),
+          timestamp: new Date(), // keep Date object
         },
       ]
 );
@@ -154,7 +152,6 @@ export default function FullChat() {
     const full = {
   ...msg,
   type: msg.type || "text",
-  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
 };
     setMessages((p) => [...p, full]);
     setMenuStep(0);
@@ -272,7 +269,7 @@ if (
   addMessage({
   sender: "bot",
   type: "text",
-  text: "Sure thing! Please select the type of appointment you’d like to schedule:",
+  text: "Perfect, choose a date and time that works best with your schedule:",
 });
 addMessage({
   sender: "bot",
@@ -370,7 +367,11 @@ addMessage({
       />
     )}
 
-    <span className="timestamp">{m.timestamp}</span>
+    <span className="timestamp">
+  {m.createdAt
+    ? new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : ""}
+</span>
   </div>
 )}
 

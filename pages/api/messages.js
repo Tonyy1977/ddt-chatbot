@@ -1,6 +1,6 @@
 // chatbot-app/api/admin/messages.js
 import dbConnect from '../../lib/dbConnect.js';
-import Message from '../../models/Message.js';
+import Message from '../../models/message.js';
 
 export default async function handler(req, res) {
   await dbConnect();

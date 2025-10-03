@@ -5,11 +5,14 @@ export default function handler(req, res) {
 
   const validUsers = [
     { email: process.env.ADMIN_EMAIL_1, password: process.env.ADMIN_PASSWORD_1 },
-    { email: process.env.ADMIN_EMAIL_2, password: process.env.ADMIN_PASSWORD_2 }
+    { email: process.env.ADMIN_EMAIL_2, password: process.env.ADMIN_PASSWORD_2 },
+
+    // 👇 Add a static test user for local login
+    { email: "KhoaPhan", password: "peoplecallmeGus" },
   ];
 
   const isValid = validUsers.some(
-    user => user.email === email && user.password === password
+    (user) => user.email === email && user.password === password
   );
 
   if (isValid) {

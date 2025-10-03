@@ -2,7 +2,7 @@
 import mongoose from "mongoose";
 import Message from "../models/message.js";
 
-const MONGO_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/chatbot"; // adjust if needed
+const MONGO_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/chatbot";
 
 (async () => {
   try {
@@ -15,11 +15,10 @@ const MONGO_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/chatbot"
     console.log(`Found ${messages.length} messages missing createdAt...`);
 
     for (const msg of messages) {
-      // Use old timestamp if available, fallback to ObjectId time
       const fallbackDate = msg.timestamp || msg._id.getTimestamp();
 
-      msg.createdAt = fallbackDate;
-      msg.updatedAt = fallbackDate;
+      msg.createdAt = new Date(fallbackDate);
+      msg.updatedAt = new Date(fallbackDate);
       await msg.save();
     }
 
