@@ -403,19 +403,26 @@ max-width: 75%;
   padding: 8px 16px;
   border: 1px solid #ccc;
   border-radius: 999px; /* pill shape */
-  text-align: center;
+  text-align: left;
   cursor: pointer;
-  font-size: 10px;
-  width: fit-content;         /* <- fits text */
-  max-width: 100%;
+  font-size: 15px;
   transition: background-color 0.2s ease, color 0.2s ease;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  white-space: nowrap;        /* keep on one line */
+
+  /* 🔑 allow wrapping */
+  white-space: normal;       /* let text wrap */
+  word-break: break-word;    /* break long words if needed */
+  overflow-wrap: anywhere;   /* modern wrapping */
+
+  /* 🔑 keep it flexible but not endless */
+  max-width: 250px;          /* limit width inside chat */
+  display: inline-block;     /* still pill-like, not full row */
 }
 .option-box:hover {
-  background-color: #0078ff;  /* Messenger blue */
+  background-color: #0078ff;
   color: white;
 }
+
 .followup-buttons {
   display: flex;
   flex-direction: column;
@@ -1018,4 +1025,24 @@ html, body, #root {
   border: none;
   font-size: 16px;
   cursor: pointer;
+}
+.booking-options-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+  max-width: 100%;   /* lock within chat width */
+}
+
+.booking-option-btn {
+  display: block;
+  width: 250px;          /* or max-width */
+  white-space: normal;
+  word-break: break-word;
+  text-align: left;
+}
+
+
+.booking-option-btn:hover {
+  background: #f5f5f5;
 }

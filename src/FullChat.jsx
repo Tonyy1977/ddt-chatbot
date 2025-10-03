@@ -3,6 +3,8 @@ import axios from "axios";
 import qaData from "./qaData";
 import { v4 as uuidv4 } from "uuid";
 import BookingWidget from "./BookingWidget"; // 👈 new widget
+import ReactMarkdown from "react-markdown";
+
 
 const API_BASE = "/api";
 
@@ -173,8 +175,9 @@ You speak with light Southern charm and polite hospitality, but keep it professi
 Be clear, concise, and helpful. Keep answers short — 2–3 sentences unless necessary.
 
 📅 Scheduling Rules:
-- When user asks to schedule, show available appointment types.
-- Do not list times or suggest slots manually; always show the booking widget.
+- Never ask for clarification or suggest times in plain text.
+- When the user mentions a tour, meeting, or specific address, immediately show the booking widget.
+- Do not explain scheduling rules or list hours manually — the widget always provides correct options.
 
 FAQs: ${JSON.stringify(qaData)}
       `;
@@ -192,25 +195,90 @@ FAQs: ${JSON.stringify(qaData)}
 
       let reply = res.data?.choices?.[0]?.message?.content || "";
 
-      // ✅ Detect scheduling intent
-      if (
-        userRaw.toLowerCase().includes("schedule") ||
-        userRaw.toLowerCase().includes("appointment") ||
-        userRaw.toLowerCase().includes("book")
-      ) {
-        addMessage({
-          sender: "bot",
-          type: "text",
-          text: "What type of appointment are you looking for?",
-        });
+// ✅ Check for booking markers in bot answer
+if (reply.includes("__BOOKING_MEETING_NEW__")) {
+  // Strip the marker out of the visible text
+  const cleanText = reply.replace("__BOOKING_MEETING_NEW__", "").trim();
 
-        addMessage({
-          sender: "bot",
-          type: "booking-types",
-          options: bookingTypes,
-        });
-        return;
-      }
+  if (cleanText) {
+    addMessage({ sender: "bot", text: cleanText });
+  }
+
+  // Force the "meeting" booking widget
+  const meetingTypes = bookingTypes.filter(bt => /meeting/i.test(bt.title));
+  addMessage({
+    sender: "bot",
+    type: "booking-types",
+    options: meetingTypes,
+  });
+  return; // stop so it doesn’t fall into other logic
+}
+// Reschedule
+if (reply.includes("__RESCHEDULE_APPOINTMENT__")) {
+  // Strip the marker out of the visible text
+  const cleanText = reply.replace("__RESCHEDULE_APPOINTMENT__", "").trim();
+
+  if (cleanText) {
+    addMessage({ sender: "bot", text: cleanText });
+  }
+
+  // Force both "meeting" and "tour" booking widgets
+  const rescheduleTypes = bookingTypes.filter(bt =>
+    /meeting|tour/i.test(bt.title)
+  );
+
+  addMessage({
+    sender: "bot",
+    type: "booking-types",
+    options: rescheduleTypes,
+  });
+
+  return; // stop so it doesn’t fall into other logic
+}
+
+
+      // ✅ Detect scheduling intent
+if (
+  userRaw.toLowerCase().includes("schedule") ||
+  userRaw.toLowerCase().includes("appointment") ||
+  userRaw.toLowerCase().includes("tour")
+) {
+  let filteredTypes = bookingTypes;
+
+  // 1. Check for specific address match
+  const addrMatch = bookingTypes.filter(bt =>
+    userRaw.toLowerCase().includes(bt.title.toLowerCase())
+  );
+  if (addrMatch.length > 0) {
+    filteredTypes = addrMatch;
+  }
+  // 2. Else check for tour/meeting keyword
+  else if (userRaw.toLowerCase().includes("tour")) {
+    filteredTypes = bookingTypes.filter(bt =>
+      /tour/i.test(bt.title)
+    );
+  } else if (userRaw.toLowerCase().includes("meeting")) {
+    filteredTypes = bookingTypes.filter(bt =>
+      /meeting/i.test(bt.title)
+    );
+  }
+  // 3. Else → general (all types)
+
+  // Respond
+  // Always show booking widget(s) directly
+  addMessage({
+  sender: "bot",
+  type: "text",
+  text: "Sure thing! Please select the type of appointment you’d like to schedule:",
+});
+addMessage({
+  sender: "bot",
+  type: "booking-types",
+  options: filteredTypes,
+});
+
+  return;
+}
 
       if (reply) {
         addMessage({ sender: "bot", text: reply });
@@ -273,22 +341,48 @@ FAQs: ${JSON.stringify(qaData)}
                       className="avatar no-blur"
                     />
                   )}
-                  <div className={`message ${isBot ? "bot-msg" : "user-msg"}`}>
-                    {m.type === "text" && (
-                      <div
-                        className="message-text"
-                        dangerouslySetInnerHTML={{
-                          __html: Array.isArray(m.text)
-                            ? m.text.map((str) => `<div>${str}</div>`).join("")
-                            : `<div>${m.text}</div>`,
-                        }}
-                      />
-                    )}
+                  {/* ✅ Only wrap text/calendar in gray bubble */}
+{(m.type === "text" || m.type === "calendar") && (
+  <div className={`message ${isBot ? "bot-msg" : "user-msg"}`}>
+    {m.type === "text" && (
+  <div className="message-text">
+    <ReactMarkdown
+      components={{
+        a: ({ node, ...props }) => (
+          <a {...props} target="_blank" rel="noopener noreferrer" />
+        ),
+      }}
+    >
+      {Array.isArray(m.text) ? m.text.join("\n") : m.text}
+    </ReactMarkdown>
+  </div>
+)}
 
-                    {m.type === "booking-types" && (
-  <div className="booking-type-list">
+
+    {m.type === "calendar" && (
+      <BookingWidget
+        bookingTypeId={m.bookingTypeId}
+        bookingTypeName={m.bookingTypeName}
+        addMessage={addMessage}
+      />
+    )}
+
+    <span className="timestamp">
+      {m.timestamp
+        ? new Date(m.timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : ""}
+    </span>
+  </div>
+)}
+
+{/* ✅ Render booking options outside, no gray bubble */}
+{m.type === "booking-types" && (
+  <div className="booking-options-wrapper">
     {m.options.map((bt) => (
-      <button
+      <div
         key={bt.id}
         className="option-box"
         onClick={() => {
@@ -302,29 +396,11 @@ FAQs: ${JSON.stringify(qaData)}
         }}
       >
         {bt.title}
-      </button>
+      </div>
     ))}
   </div>
 )}
 
-                    {m.type === "calendar" && (
-  <BookingWidget
-    bookingTypeId={m.bookingTypeId}
-    bookingTypeName={m.bookingTypeName}
-    addMessage={addMessage}   // 👈 pass down
-  />
-)}
-
-                    <span className="timestamp">
-  {m.timestamp
-    ? new Date(m.timestamp).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : ""}
-</span>
-
-                  </div>
                 </div>
               );
             })}

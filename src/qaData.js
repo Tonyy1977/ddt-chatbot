@@ -11,12 +11,12 @@ const qaData = [
     keywords: ["payment", "pay", "online", "methods"],
     answer: [
       "Great question, rent payments are made simple through your resident portal. Please use link below if you are having any issues.",
-      '<a href="https://ddtenterprise.org/rental-properties-2/" target="_blank" rel="noopener noreferrer">Resident Portal</a>'
+      '[Resident Portal](https://ddtenterprise.org/rental-properties-2/)'
     ],
     followUps: {
       "how do i pay rent": [
       "Great question, rent payments are made simple through your resident portal. Please use link below if you are having any issues.",
-      '<a href="https://ddtenterprise.org/rental-properties-2/" target="_blank" rel="noopener noreferrer">Resident Portal</a>'
+      '[Resident Portal](https://ddtenterprise.org/rental-properties-2/)'
     ],
       "when is payment due": "Rent payment is due on the 5th of each month. Late fees apply after that date.",
       "what payment methods are accepted": "We accept debit cards, credit cards, and bank transfers through the Resident Portal."
@@ -51,7 +51,7 @@ const qaData = [
   keywords: ["rent", "payment", "house", "miss"],
   answer: [
     "Great question, rent payments are made simple through your resident portal. Please use link below if you are having any issues.",
-    '<a href="https://ddtenterprise.org/rental-properties-2/" target="_blank" rel="noopener noreferrer">Resident Portal</a>'
+    '[Resident Portal](https://ddtenterprise.org/rental-properties-2/)'
   ],
   followUps: {
     "when is rent due": [
@@ -60,7 +60,7 @@ const qaData = [
     ],
     "how do i pay rent": [
       "Great question, rent payments are made simple through your resident portal. Please use link below if you are having any issues.",
-      '<a href="https://ddtenterprise.org/rental-properties-2/" target="_blank" rel="noopener noreferrer">Resident Portal</a>'
+      '[Resident Portal](https://ddtenterprise.org/rental-properties-2/)'
     ],
     "what happens if i miss rent": [
       "If you miss rent, you will be issued a 21 day eviction notice.",
@@ -81,14 +81,6 @@ const qaData = [
       "We conduct a best fit assessment based off all applicants. The requirements are:\n625 minimum credit score, Monthly income is 2.5 x rent, Background check, No previous evictions.",
     ],
   },
-  {
-  question: [
-    "I just applied. What now?",
-    "What happens after submitting the application?"
-  ],
-  keywords: ["apply", "submitted", "next step"],
-  answer: "__BOOKING_TOUR_NEW__" // 👈 triggers the booking flow
-},
   {
     question: [
       "I paid the deposit — what now?",
@@ -130,43 +122,6 @@ const qaData = [
       "All homes managed by DDT Enterprise are encrypted with padded Electrical Locks. Once the pro-rated/1st month’s rent is paid, 4 hours prior to your move-in time (4:00 pm), you will receive the code to allot for your move-in.",
     ],
   },
- // --- TOURS ---
-{
-  question: [
-    "When can I tour the property?",
-    "How do I schedule a tour?",
-    "I want to come see the house",
-    "When is the tour available?"
-  ],
-  keywords: ["tour", "visit", "see", "property", "home"],
-  answer: ["__BOOKING_TOUR_AVAIL__"],
-  type: "schedule_tour"
-},
-{
-  question: [
-    "I missed my tour — can I reschedule?",
-    "I wasn’t able to make my appointment. Can I set another time?",
-    "Can I change my tour date?",
-    "I need to reschedule my tour"
-  ],
-  keywords: ["reschedule", "missed", "change", "tour", "appointment"],
-  answer: ["__BOOKING_TOUR_RESCHEDULE__"],
-  type: "schedule_reschedule"
-},
-
-// --- MEETINGS ---
-{
-  question: [
-    "Schedule a meeting",
-    "Book a meeting with Demetrice",
-    "Set up a meeting with the landlord",
-    "I want to meet Demetrice",
-    "Schedule appointment with landlord"
-  ],
-  keywords: ["meeting", "appointment", "landlord", "demetrice"],
-  answer: ["__BOOKING_MEETING_NEW__"],
-  type: "schedule_meeting"
-},
   {
     question: [
       "Why wasn’t I chosen for the unit?",
@@ -341,7 +296,7 @@ const qaData = [
     keywords: ["speak", "person", "live agent", "contact", "customer service"],
     answer: [
       "We would love to hear from you. Please use the link below.",
-      '<a href="https://ddtenterprise.org/contact-us/" target="_blank" rel="noopener noreferrer">Contact Us</a>'
+      '[Contact Us](https://ddtenterprise.org/contact-us/)'
     ]
   },
 
@@ -365,7 +320,7 @@ const qaData = [
     question: ["What rentals are currently available?"],
     keywords: ["available", "rental available","Homes","Condominiums", "properties", "current"],
     answer: [
-      '<a href="https://ddtenterprise.org/resident-portal-2-2-2/" target="_blank" rel="noopener noreferrer">View Available Rentals</a>'
+      '[View Available Rentals](https://ddtenterprise.org/resident-portal-2-2-2/)'
     ]
   },
 
@@ -375,7 +330,7 @@ const qaData = [
     ],
     keywords: ["maintenance", "request", "trouble", "issue", "form"],
     answer: [
-      '<a href="https://ddtenterprise.managebuilding.com/manager/app/tasks/add?taskTypeId=2" target="_blank" rel="noopener noreferrer">Submit Maintenance Request</a>'
+      '[Submit Maintenance Request](https://ddtenterprise.managebuilding.com/manager/app/tasks/add?taskTypeId=2)'
     ]
   },
     {
@@ -595,6 +550,30 @@ const qaData = [
   question: ["How long does DDT take to typically get a home rented?"],
   answer: ["DDT averages an extremely low vacancy rate of 17 days or less per home."],
 },
+{
+  question: ["I have a property I would like to have managed by DDT"],
+  answer: ["This sounds great! Congratulations on being a savvy investor. Please choose a date and time that works best for you to discuss Property Management. __BOOKING_MEETING_NEW__"],
+},
+{
+  question: ["How long will a tour take?"],
+  answer: ["Tours typically last 15 minutes, giving you ample time to explore the property and ask any questions you might have. If you need more time, just let us know, and we'll do our best to accommodate."],
+},
+{
+  question: ["How long will a meeting take?"],
+  answer: ["Property Management meetings typically last 30 minutes, in which we break down the benefits of using DDT Enterprise's resources and their alignment of where community is the primary focus."],
+},
+{
+  question: ["I missed my appointment, can I reschedule?"],
+  answer: ["Of course you can reschedule, please choose a time that works best for your schedule. __RESCHEDULE_APPOINTMENT__"],
+},
+{
+  question: ["Those times don't work for me, is there any other available times?"],
+  answer: ["Please use the calendar above to select an available time - those are the only times we can currently offer."]
+},
+{
+  question: ["I only work overnight"],
+  answer: ["Please use the calendar above to select an available time - those are the only times we can currently offer."]
+}
 ];
 
 
