@@ -149,10 +149,10 @@ export default function FullChat() {
 
   const addMessage = (msg) => {
     const full = {
-      ...msg,
-      type: msg.type || "text",
-      timestamp: new Date().toISOString(),
-    };
+  ...msg,
+  type: msg.type || "text",
+  timestamp: new Date(),   // ✅ actual Date object
+};
     setMessages((p) => [...p, full]);
     setMenuStep(0);
   };
@@ -368,13 +368,13 @@ addMessage({
     )}
 
     <span className="timestamp">
-      {m.timestamp
-        ? new Date(m.timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : ""}
-    </span>
+  {m.timestamp
+    ? new Date(m.timestamp).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : ""}
+</span>
   </div>
 )}
 
@@ -432,7 +432,7 @@ addMessage({
                         addMessage({
                           sender: "bot",
                           text:
-                            'Thomas Inspections is a nationwide home inspection company. Learn more at <a href="https://www.thomasinspectionsva.com/" target="_blank" rel="noopener noreferrer">Visit Thomas Inspections</a>',
+                            'Thomas Inspections is a nationwide home inspection company. Learn more at [Visit Thomas Inspections](https://www.thomasinspectionsva.com/)',
                         });
                         setShowWelcomeOptions(false);
                       }}
