@@ -118,7 +118,9 @@ export default function FullChat() {
         sender: msg.sender,
         text: String(msg.text),
         type: "text",
-        timestamp: msg.timestamp ? new Date(msg.timestamp) : null,
+        timestamp: msg.timestamp
+  ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  : '',
       }))
     : [
         {
@@ -152,7 +154,7 @@ export default function FullChat() {
     const full = {
   ...msg,
   type: msg.type || "text",
-  timestamp: new Date(),   // valid JS Date object
+  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
 };
     setMessages((p) => [...p, full]);
     setMenuStep(0);
@@ -368,17 +370,7 @@ addMessage({
       />
     )}
 
-    <span className="timestamp">
-  {(() => {
-    try {
-      const d = new Date(m.timestamp);
-      if (isNaN(d.getTime())) return "";   // invalid date, show nothing
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    } catch {
-      return "";
-    }
-  })()}
-</span>
+    <span className="timestamp">{m.timestamp}</span>
   </div>
 )}
 
