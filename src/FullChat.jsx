@@ -347,12 +347,12 @@ addMessage({
     {m.type === "text" && (
   <div className="message-text">
     <ReactMarkdown
-      components={{
-        a: ({ node, ...props }) => (
-          <a {...props} target="_blank" rel="noopener noreferrer" />
-        ),
-      }}
-    >
+  components={{
+    a: ({ ...props }) => (
+      <a {...props} target="_blank" rel="noopener noreferrer" />
+    ),
+  }}
+>
       {Array.isArray(m.text) ? m.text.join("\n") : m.text}
     </ReactMarkdown>
   </div>
