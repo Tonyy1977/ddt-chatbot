@@ -113,21 +113,22 @@ export default function FullChat() {
         });
         const history = Array.isArray(res.data) ? res.data : [];
         setMessages(
-          history.length > 0
-            ? history.map((msg) => ({
-                sender: msg.sender,
-                text: String(msg.text),
-                type: "text",
-                timestamp: msg.timestamp,
-              }))
-            : [
-                {
-                  sender: "bot",
-                  text: "Hi, I'm Micah, DDT's virtual assistant. How can I help you today?",
-                  type: "text",
-                },
-              ]
-        );
+  history.length > 0
+    ? history.map((msg) => ({
+        sender: msg.sender,
+        text: String(msg.text),
+        type: "text",
+        timestamp: msg.timestamp ? new Date(msg.timestamp) : null, // normalize
+      }))
+    : [
+        {
+          sender: "bot",
+          text: "Hi, I'm Micah, DDT's virtual assistant. How can I help you today?",
+          type: "text",
+          timestamp: new Date(),
+        },
+      ]
+);
       } catch {
         setMessages([
           {
@@ -151,7 +152,7 @@ export default function FullChat() {
     const full = {
   ...msg,
   type: msg.type || "text",
-  timestamp: new Date(),   // ✅ actual Date object
+  timestamp: new Date(),   // valid JS Date object
 };
     setMessages((p) => [...p, full]);
     setMenuStep(0);
@@ -368,8 +369,8 @@ addMessage({
     )}
 
     <span className="timestamp">
-  {m.timestamp
-    ? new Date(m.timestamp).toLocaleTimeString([], {
+  {m.timestamp instanceof Date && !isNaN(m.timestamp)
+    ? m.timestamp.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       })
