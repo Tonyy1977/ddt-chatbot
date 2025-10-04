@@ -100,14 +100,22 @@ setFiltered(messages);
   const rows = [['Session ID', 'Sender', 'Text', 'Timestamp', 'Topic']];
 
   messages.forEach(msg => {
-    rows.push([
-  msg.sessionId || '',
-  msg.sender || '',
-  `"${msg.text?.toString().replace(/"/g, '""') || ''}"`,
-  msgDate ? msgDate.toISOString() : '',
-  msg.topic || ''
-]);
-  });
+  const d = msg.createdAt
+    ? new Date(msg.createdAt)
+    : msg.timestamp
+    ? new Date(msg.timestamp)
+    : null;
+
+  const formattedDate = d && !isNaN(d) ? d.toISOString() : '';
+
+  rows.push([
+    msg.sessionId || '',
+    msg.sender || '',
+    `"${msg.text?.toString().replace(/"/g, '""') || ''}"`,
+    formattedDate,
+    msg.topic || ''
+  ]);
+});
 
   const csvContent = rows.map(row => row.join(',')).join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
