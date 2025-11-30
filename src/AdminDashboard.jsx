@@ -11,7 +11,7 @@ function AdminDashboard() {
   const [uniqueSessions, setUniqueSessions] = useState([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [analytics, setAnalytics] = useState(null);
+  //const [analytics, setAnalytics] = useState(null);
   const [tab, setTab] = useState('history');
 
    const parseMessageDate = (msg) => {
@@ -79,18 +79,18 @@ setFiltered(normalized);
   };
 
   // ✅ Define fetchAnalytics
-  const fetchAnalytics = async () => {
-  try {
-    const res = await axios.get('/api/analytics/summary');
-    setAnalytics(res.data);
-  } catch (err) {
-    console.error('❌ Failed to load analytics summary:', err);
-  }
-};
+  //const fetchAnalytics = async () => {
+  //try {
+    //const res = await axios.get('/api/analytics/summary');
+    //setAnalytics(res.data);
+  //} catch (err) {
+    //console.error('❌ Failed to load analytics summary:', err);
+  //}
+//};
 
   // ✅ Fetch both messages and analytics in one useEffect
   useEffect(() => {
-    fetchAnalytics();
+    //fetchAnalytics();
     fetchMessages();
   }, []);
 

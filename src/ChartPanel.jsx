@@ -35,16 +35,16 @@ function ChartPanel({ messages }) {
   };
 
   // 🧠 GPT Topic Stats
-  const topicStats = useMemo(() => {
-    const countMap = {};
-    messages.forEach((msg) => {
-      const topic = msg.topics?.[0] || msg.topic;
-      if (topic) {
-        countMap[topic] = (countMap[topic] || 0) + 1;
-      }
-    });
-    return Object.entries(countMap).map(([name, value]) => ({ name, value }));
-  }, [messages]);
+  //const topicStats = useMemo(() => {
+    //const countMap = {};
+    //messages.forEach((msg) => {
+      //const topic = msg.topics?.[0] || msg.topic;
+      //if (topic) {
+        //countMap[topic] = (countMap[topic] || 0) + 1;
+      //}
+    //});
+    //return Object.entries(countMap).map(([name, value]) => ({ name, value }));
+  //}, [messages]);
 
   // ⏱️ Messages Per Day
   const dailyStats = useMemo(() => {
