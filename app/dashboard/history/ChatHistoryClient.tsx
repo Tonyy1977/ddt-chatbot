@@ -71,12 +71,7 @@ export function ChatHistoryClient({ initialThreads }: { initialThreads: Thread[]
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    const diffHours = diffMs / (1000 * 60 * 60);
-    if (diffHours < 1) return `${Math.floor(diffMs / 60000)}m ago`;
-    if (diffHours < 24) return `${Math.floor(diffHours)}h ago`;
-    return d.toLocaleDateString();
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   return (
@@ -120,10 +115,13 @@ export function ChatHistoryClient({ initialThreads }: { initialThreads: Thread[]
               </div>
             ) : (
               filteredThreads.map(thread => (
-                <button
+                <div
                   key={thread.id}
                   onClick={() => setSelectedThread(thread)}
-                  className={`w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors group ${selectedThread?.id === thread.id ? 'bg-cyan-500/5 border-l-2 border-l-cyan-400' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && setSelectedThread(thread)}
+                  className={`w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors group cursor-pointer ${selectedThread?.id === thread.id ? 'bg-cyan-500/5 border-l-2 border-l-cyan-400' : ''}`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-white truncate max-w-[60%]">{thread.visitorId}</span>
@@ -139,7 +137,7 @@ export function ChatHistoryClient({ initialThreads }: { initialThreads: Thread[]
                       </button>
                     </div>
                   </div>
-                </button>
+                </div>
               ))
             )}
           </div>
