@@ -1,5 +1,4 @@
 // lib/knowledge/parser.ts - Document parsing for RAG
-import { PDFParse } from 'pdf-parse';
 import * as cheerio from 'cheerio';
 
 export interface ParsedDocument {
@@ -63,7 +62,7 @@ export async function parseDocument(
 }
 
 async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
-  // pdf-parse v2 uses class-based API
+  const { PDFParse } = await import('pdf-parse');
   const parser = new PDFParse({ data: buffer });
 
   try {
