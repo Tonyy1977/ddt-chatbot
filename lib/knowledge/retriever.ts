@@ -74,7 +74,14 @@ export async function retrieveContext(
   let results;
 
   if (opts.searchMode === 'hybrid') {
-    results = await executeHybridSearch(query, embeddingStr, opts);
+    try {
+      results = await executeHybridSearch(query, embeddingStr, opts);
+    } catch (hybridErr) {
+      // Hybrid may fail if search_vector is text instead of tsvector
+      // (migration 001_setup_vector.sql not yet applied). Fall back to vector-only.
+      console.warn('Hybrid search failed, falling back to vector-only:', (hybridErr as Error).message?.slice(0, 120));
+      results = await executeVectorOnlySearch(embeddingStr, opts);
+    }
   } else if (opts.searchMode === 'keyword') {
     results = await executeKeywordOnlySearch(query, opts);
   } else {

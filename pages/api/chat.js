@@ -59,8 +59,10 @@ export default async function handler(req, res) {
     let topics = [];
     if (userContent) {
       try {
+        const base = process.env.BASE_URL
+          || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
         const classifyRes = await axios.post(
-          `${process.env.BASE_URL || 'http://localhost:3000'}/api/classify`,
+          `${base}/api/classify`,
           { text: userContent }
         );
         const topic = classifyRes.data.topic;
