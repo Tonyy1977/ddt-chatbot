@@ -14,7 +14,7 @@ function LoginForm() {
   const [blink, setBlink] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') || '/dashboard';
+  const redirectTo = searchParams?.get('redirectTo') || '/dashboard';
 
   useEffect(() => {
     const interval = setInterval(() => setBlink(b => !b), 530);
