@@ -5,7 +5,6 @@ import {
   Users,
   Zap,
   Activity,
-  TrendingUp,
   Bot,
   User,
   Database,
@@ -13,12 +12,13 @@ import {
 } from 'lucide-react';
 import { db } from '@/db';
 import { chats, messages, knowledgeSources } from '@/db/schema';
-import { count, sql, eq } from 'drizzle-orm';
+import { count, sql, eq, and, gte, lte } from 'drizzle-orm';
 import {
   ActivityTrendChart,
   PeakHourBarChart,
   TopicsPieChart,
   DayOfWeekChart,
+  DateFilter,
 } from '@/app/components/dashboard/analytics';
 
 // ============================================
@@ -116,12 +116,72 @@ function formatHour(hour: number): string {
   return `${hour - 12}:00 PM`;
 }
 
+const RANGE_LABELS: Record<string, string> = {
+  '7d': 'LAST 7 DAYS',
+  '30d': 'LAST 30 DAYS',
+  '90d': 'LAST 90 DAYS',
+  'all': 'ALL TIME',
+  'custom': 'CUSTOM RANGE',
+};
+
+// ============================================
+// DATE RANGE RESOLVER
+// ============================================
+
+interface DateRange {
+  days: number | null; // null = all time
+  fromDate: string | null; // ISO date for custom
+  toDate: string | null;
+  label: string;
+}
+
+function resolveDateRange(searchParams: Record<string, string | string[] | undefined>): DateRange {
+  const range = (searchParams.range as string) || '30d';
+  const from = searchParams.from as string | undefined;
+  const to = searchParams.to as string | undefined;
+
+  if (range === 'custom' && from && to) {
+    return { days: null, fromDate: from, toDate: to, label: `${from} — ${to}` };
+  }
+  if (range === 'all') return { days: null, fromDate: null, toDate: null, label: 'ALL TIME' };
+  if (range === '7d') return { days: 7, fromDate: null, toDate: null, label: 'LAST 7 DAYS' };
+  if (range === '90d') return { days: 90, fromDate: null, toDate: null, label: 'LAST 90 DAYS' };
+  return { days: 30, fromDate: null, toDate: null, label: 'LAST 30 DAYS' };
+}
+
+// Build SQL WHERE fragment for messages table date filtering
+function msgDateFilter(dr: DateRange) {
+  if (dr.fromDate && dr.toDate) {
+    return sql`created_at >= ${dr.fromDate}::date AND created_at < (${dr.toDate}::date + INTERVAL '1 day')`;
+  }
+  if (dr.days) {
+    return sql`created_at >= (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date - INTERVAL '${sql.raw(String(dr.days))} days'`;
+  }
+  return sql`TRUE`;
+}
+
+// Build SQL WHERE fragment for chats table date filtering
+function chatDateFilter(dr: DateRange) {
+  if (dr.fromDate && dr.toDate) {
+    return sql`created_at >= ${dr.fromDate}::date AND created_at < (${dr.toDate}::date + INTERVAL '1 day')`;
+  }
+  if (dr.days) {
+    return sql`created_at >= (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date - INTERVAL '${sql.raw(String(dr.days))} days'`;
+  }
+  return sql`TRUE`;
+}
+
 // ============================================
 // DATA FETCHING
 // ============================================
 
-async function getAnalyticsData() {
-  // Run all queries in parallel
+async function getAnalyticsData(dr: DateRange) {
+  const mFilter = msgDateFilter(dr);
+  const cFilter = chatDateFilter(dr);
+
+  const isCustomRange = !!(dr.fromDate && dr.toDate);
+  const isAllTime = !dr.days && !isCustomRange;
+
   const [
     totalChatsResult,
     totalMessagesResult,
@@ -136,96 +196,145 @@ async function getAnalyticsData() {
     avgResponseLengthResult,
     knowledgeCountResult,
   ] = await Promise.all([
-    // Total chats
-    db.select({ count: count() }).from(chats),
-    // Total messages
-    db.select({ count: count() }).from(messages),
-    // User messages
-    db.select({ count: count() }).from(messages).where(eq(messages.role, 'user')),
-    // Bot messages
-    db.select({ count: count() }).from(messages).where(eq(messages.role, 'assistant')),
-    // Unique visitors
-    db.select({ count: sql<number>`count(distinct ${chats.visitorId})` }).from(chats),
-    // Daily messages (last 30 days) — in Eastern time
-    db.execute(sql`
-      WITH days AS (
-        SELECT generate_series(
-          (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date - INTERVAL '29 days',
-          (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date,
-          '1 day'::interval
-        )::date AS day
-      )
-      SELECT
-        TO_CHAR(d.day, 'Mon DD') AS date,
-        COALESCE(m.cnt, 0)::int AS count
-      FROM days d
-      LEFT JOIN (
-        SELECT DATE(created_at AT TIME ZONE 'America/New_York') AS day, COUNT(*) AS cnt
-        FROM messages
-        WHERE created_at >= (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date - INTERVAL '29 days'
-        GROUP BY DATE(created_at AT TIME ZONE 'America/New_York')
-      ) m ON m.day = d.day
-      ORDER BY d.day
-    `),
-    // Hourly distribution — in Eastern time
+    // Total chats (filtered)
+    db.execute(sql`SELECT COUNT(*)::int AS count FROM chats WHERE ${cFilter}`),
+    // Total messages (filtered)
+    db.execute(sql`SELECT COUNT(*)::int AS count FROM messages WHERE ${mFilter}`),
+    // User messages (filtered)
+    db.execute(sql`SELECT COUNT(*)::int AS count FROM messages WHERE role = 'user' AND ${mFilter}`),
+    // Bot messages (filtered)
+    db.execute(sql`SELECT COUNT(*)::int AS count FROM messages WHERE role = 'assistant' AND ${mFilter}`),
+    // Unique visitors (filtered)
+    db.execute(sql`SELECT COUNT(DISTINCT visitor_id)::int AS count FROM chats WHERE ${cFilter}`),
+    // Daily messages — dynamic range
+    isCustomRange
+      ? db.execute(sql`
+          WITH days AS (
+            SELECT generate_series(
+              ${dr.fromDate}::date,
+              ${dr.toDate}::date,
+              '1 day'::interval
+            )::date AS day
+          )
+          SELECT
+            TO_CHAR(d.day, 'Mon DD') AS date,
+            COALESCE(m.cnt, 0)::int AS count
+          FROM days d
+          LEFT JOIN (
+            SELECT DATE(created_at AT TIME ZONE 'America/New_York') AS day, COUNT(*) AS cnt
+            FROM messages
+            WHERE ${mFilter}
+            GROUP BY DATE(created_at AT TIME ZONE 'America/New_York')
+          ) m ON m.day = d.day
+          ORDER BY d.day
+        `)
+      : isAllTime
+      ? db.execute(sql`
+          WITH bounds AS (
+            SELECT
+              COALESCE(MIN(DATE(created_at AT TIME ZONE 'America/New_York')), CURRENT_DATE) AS first_day,
+              (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date AS last_day
+            FROM messages
+          ),
+          days AS (
+            SELECT generate_series(
+              (SELECT first_day FROM bounds),
+              (SELECT last_day FROM bounds),
+              '1 day'::interval
+            )::date AS day
+          )
+          SELECT
+            TO_CHAR(d.day, 'Mon DD') AS date,
+            COALESCE(m.cnt, 0)::int AS count
+          FROM days d
+          LEFT JOIN (
+            SELECT DATE(created_at AT TIME ZONE 'America/New_York') AS day, COUNT(*) AS cnt
+            FROM messages
+            GROUP BY DATE(created_at AT TIME ZONE 'America/New_York')
+          ) m ON m.day = d.day
+          ORDER BY d.day
+        `)
+      : db.execute(sql`
+          WITH days AS (
+            SELECT generate_series(
+              (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date - INTERVAL '${sql.raw(String(dr.days! - 1))} days',
+              (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date,
+              '1 day'::interval
+            )::date AS day
+          )
+          SELECT
+            TO_CHAR(d.day, 'Mon DD') AS date,
+            COALESCE(m.cnt, 0)::int AS count
+          FROM days d
+          LEFT JOIN (
+            SELECT DATE(created_at AT TIME ZONE 'America/New_York') AS day, COUNT(*) AS cnt
+            FROM messages
+            WHERE ${mFilter}
+            GROUP BY DATE(created_at AT TIME ZONE 'America/New_York')
+          ) m ON m.day = d.day
+          ORDER BY d.day
+        `),
+    // Hourly distribution (filtered) — Eastern time
     db.execute(sql`
       SELECT
         EXTRACT(HOUR FROM created_at AT TIME ZONE 'America/New_York')::int AS hour,
         COUNT(*)::int AS count
       FROM messages
+      WHERE ${mFilter}
       GROUP BY EXTRACT(HOUR FROM created_at AT TIME ZONE 'America/New_York')
       ORDER BY hour
     `),
-    // Topics aggregation
+    // Topics aggregation (filtered)
     db.execute(sql`
       SELECT
         topic,
         COUNT(*)::int AS count
       FROM messages,
         jsonb_array_elements_text(topics) AS topic
-      WHERE jsonb_array_length(topics) > 0
+      WHERE jsonb_array_length(topics) > 0 AND ${mFilter}
       GROUP BY topic
       ORDER BY count DESC
       LIMIT 6
     `),
-    // Day of week distribution — in Eastern time
+    // Day of week distribution (filtered) — Eastern time
     db.execute(sql`
       SELECT
         EXTRACT(DOW FROM created_at AT TIME ZONE 'America/New_York')::int AS dow,
         COUNT(*)::int AS count
       FROM messages
+      WHERE ${mFilter}
       GROUP BY EXTRACT(DOW FROM created_at AT TIME ZONE 'America/New_York')
       ORDER BY dow
     `),
-    // Avg messages per session
+    // Avg messages per session (filtered)
     db.execute(sql`
       SELECT COALESCE(AVG(msg_count), 0)::numeric(10,1) AS avg_per_session
       FROM (
         SELECT chat_id, COUNT(*) AS msg_count
         FROM messages
+        WHERE ${mFilter}
         GROUP BY chat_id
       ) sub
     `),
-    // Avg response length
+    // Avg response length (filtered)
     db.execute(sql`
       SELECT COALESCE(AVG(LENGTH(content)), 0)::int AS avg_length
       FROM messages
-      WHERE role = 'assistant'
+      WHERE role = 'assistant' AND ${mFilter}
     `),
-    // Knowledge sources count
+    // Knowledge sources count (not date-filtered)
     db.select({ count: count() }).from(knowledgeSources).where(eq(knowledgeSources.status, 'ready')),
   ]);
 
-  const totalChats = totalChatsResult[0]?.count || 0;
-  const totalMessages = totalMessagesResult[0]?.count || 0;
-  const userMessages = userMessagesResult[0]?.count || 0;
-  const botMessages = botMessagesResult[0]?.count || 0;
-  const uniqueVisitors = uniqueVisitorsResult[0]?.count || 0;
+  const totalChats = (totalChatsResult.rows as any[])[0]?.count || 0;
+  const totalMessages = (totalMessagesResult.rows as any[])[0]?.count || 0;
+  const userMessages = (userMessagesResult.rows as any[])[0]?.count || 0;
+  const botMessages = (botMessagesResult.rows as any[])[0]?.count || 0;
+  const uniqueVisitors = (uniqueVisitorsResult.rows as any[])[0]?.count || 0;
 
-  // Daily messages — already formatted from SQL
   const dailyMessages = (dailyMessagesResult.rows as Array<{ date: string; count: number }>);
 
-  // Hourly — fill in missing hours
+  // Hourly — fill missing hours
   const hourlyMap = new Map<number, number>();
   (hourlyResult.rows as Array<{ hour: number; count: number }>).forEach(r => {
     hourlyMap.set(r.hour, r.count);
@@ -235,7 +344,6 @@ async function getAnalyticsData() {
     count: hourlyMap.get(i) || 0,
   }));
 
-  // Find busiest hour
   let busiestHour = 0;
   let busiestHourCount = 0;
   peakHours.forEach(h => {
@@ -245,13 +353,11 @@ async function getAnalyticsData() {
     }
   });
 
-  // Topics
   const topics = (topicsResult.rows as Array<{ topic: string; count: number }>).map(r => ({
     name: r.topic,
     value: r.count,
   }));
 
-  // Day of week — fill in missing days
   const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const dowMap = new Map<number, number>();
   (dayOfWeekResult.rows as Array<{ dow: number; count: number }>).forEach(r => {
@@ -262,7 +368,6 @@ async function getAnalyticsData() {
     count: dowMap.get(i) || 0,
   }));
 
-  // Find busiest day
   let busiestDay = 0;
   let busiestDayCount = 0;
   dayOfWeek.forEach((d, i) => {
@@ -272,8 +377,8 @@ async function getAnalyticsData() {
     }
   });
 
-  const avgPerSession = Number((avgPerSessionResult.rows as Array<{ avg_per_session: string }>)[0]?.avg_per_session || 0);
-  const avgResponseLength = Number((avgResponseLengthResult.rows as Array<{ avg_length: number }>)[0]?.avg_length || 0);
+  const avgPerSession = Number((avgPerSessionResult.rows as any[])[0]?.avg_per_session || 0);
+  const avgResponseLength = Number((avgResponseLengthResult.rows as any[])[0]?.avg_length || 0);
   const knowledgeCount = knowledgeCountResult[0]?.count || 0;
   const responseRate = Number(userMessages) > 0 ? (Number(botMessages) / Number(userMessages) * 100).toFixed(0) : '0';
 
@@ -301,8 +406,14 @@ async function getAnalyticsData() {
 // ANALYTICS CONTENT (Server Component)
 // ============================================
 
-async function AnalyticsContent() {
-  const data = await getAnalyticsData();
+async function AnalyticsContent({ dateRange }: { dateRange: DateRange }) {
+  const data = await getAnalyticsData(dateRange);
+
+  const chartSubtitle = dateRange.days
+    ? `Daily message volume — last ${dateRange.days} days`
+    : dateRange.fromDate
+    ? `Daily message volume — ${dateRange.fromDate} to ${dateRange.toDate}`
+    : 'Daily message volume — all time (last 30 days shown)';
 
   return (
     <>
@@ -340,83 +451,39 @@ async function AnalyticsContent() {
 
       {/* Activity Trend */}
       <div className="mb-6">
-        <ChartPanel
-          title="Message Activity"
-          subtitle="Daily message volume over the last 30 days"
-        >
+        <ChartPanel title="Message Activity" subtitle={chartSubtitle}>
           <ActivityTrendChart data={data.dailyMessages} />
         </ChartPanel>
       </div>
 
       {/* Peak Hours + Topics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <ChartPanel
-          title="Peak Hours"
-          subtitle="When your visitors are most active"
-        >
+        <ChartPanel title="Peak Hours" subtitle="When your visitors are most active">
           <PeakHourBarChart data={data.peakHours} goldenHour={data.busiestHour} />
         </ChartPanel>
-
-        <ChartPanel
-          title="Conversation Topics"
-          subtitle="What visitors are asking about"
-        >
+        <ChartPanel title="Conversation Topics" subtitle="What visitors are asking about">
           <TopicsPieChart data={data.topics} />
         </ChartPanel>
       </div>
 
       {/* Day of Week + Stats Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartPanel
-          title="Day of Week"
-          subtitle="Message distribution across the week"
-        >
+        <ChartPanel title="Day of Week" subtitle="Message distribution across the week">
           <DayOfWeekChart data={data.dayOfWeek} busiestDay={data.busiestDay} />
         </ChartPanel>
 
-        {/* Stats Panel */}
         <div className="rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/10 overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5">
             <h2 className="text-sm font-semibold text-white">Message Intelligence</h2>
             <p className="text-[#C9CDD6]/40 text-xs mt-0.5">Key performance metrics</p>
           </div>
           <div className="p-4 space-y-1">
-            <StatRow
-              icon={<User className="w-3.5 h-3.5" />}
-              label="User Messages"
-              value={String(data.userMessages)}
-              color="text-blue-400"
-            />
-            <StatRow
-              icon={<Bot className="w-3.5 h-3.5" />}
-              label="Bot Responses"
-              value={String(data.botMessages)}
-              color="text-cyan-400"
-            />
-            <StatRow
-              icon={<BarChart3 className="w-3.5 h-3.5" />}
-              label="Response Rate"
-              value={`${data.responseRate}%`}
-              color="text-green-400"
-            />
-            <StatRow
-              icon={<MessageSquare className="w-3.5 h-3.5" />}
-              label="Avg Response Length"
-              value={`${data.avgResponseLength} chars`}
-              color="text-purple-400"
-            />
-            <StatRow
-              icon={<Database className="w-3.5 h-3.5" />}
-              label="Knowledge Sources"
-              value={String(data.knowledgeCount)}
-              color="text-amber-400"
-            />
-            <StatRow
-              icon={<Users className="w-3.5 h-3.5" />}
-              label="Unique Visitors"
-              value={String(data.uniqueVisitors)}
-              color="text-rose-400"
-            />
+            <StatRow icon={<User className="w-3.5 h-3.5" />} label="User Messages" value={String(data.userMessages)} color="text-blue-400" />
+            <StatRow icon={<Bot className="w-3.5 h-3.5" />} label="Bot Responses" value={String(data.botMessages)} color="text-cyan-400" />
+            <StatRow icon={<BarChart3 className="w-3.5 h-3.5" />} label="Response Rate" value={`${data.responseRate}%`} color="text-green-400" />
+            <StatRow icon={<MessageSquare className="w-3.5 h-3.5" />} label="Avg Response Length" value={`${data.avgResponseLength} chars`} color="text-purple-400" />
+            <StatRow icon={<Database className="w-3.5 h-3.5" />} label="Knowledge Sources" value={String(data.knowledgeCount)} color="text-amber-400" />
+            <StatRow icon={<Users className="w-3.5 h-3.5" />} label="Unique Visitors" value={String(data.uniqueVisitors)} color="text-rose-400" />
           </div>
         </div>
       </div>
@@ -482,11 +549,18 @@ function AnalyticsSkeleton() {
 // MAIN PAGE
 // ============================================
 
-export default function AnalyticsPage() {
+export default async function AnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const dateRange = resolveDateRange(params);
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Activity className="w-4 h-4 text-cyan-400" />
@@ -500,15 +574,14 @@ export default function AnalyticsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/10 text-[#C9CDD6]/40 text-xs font-mono">
-          <TrendingUp className="w-3.5 h-3.5" />
-          LAST 30 DAYS
-        </div>
+        <Suspense fallback={<div className="h-8 w-48 rounded-lg bg-white/[0.03] animate-pulse" />}>
+          <DateFilter />
+        </Suspense>
       </div>
 
       {/* Content */}
       <Suspense fallback={<AnalyticsSkeleton />}>
-        <AnalyticsContent />
+        <AnalyticsContent dateRange={dateRange} />
       </Suspense>
     </div>
   );

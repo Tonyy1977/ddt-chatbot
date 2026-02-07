@@ -8,6 +8,11 @@ dotenv.config({ path: '.env.local' });
 const { MongoClient } = await import('mongodb');
 const { db, chats, messages } = await import('../db');
 const { eq } = await import('drizzle-orm');
+const crypto = await import('crypto');
+
+function shortHash(input: string, len = 16): string {
+  return crypto.createHash('sha256').update(input).digest('hex').slice(0, len);
+}
 
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
@@ -20,7 +25,7 @@ async function migrate() {
   console.log('Connecting to MongoDB...');
   const mongo = new MongoClient(MONGODB_URI!);
   await mongo.connect();
-  const mongoDb = mongo.db(); // uses default DB from connection string
+  const mongoDb = mongo.db('micah'); // DDT chatbot data lives in the "micah" database
 
   // 2. List all collections and their counts
   const collections = await mongoDb.listCollections().toArray();
@@ -94,7 +99,7 @@ async function migrate() {
   // 4. Migrate each session
   for (const [sessionId, sessionMessages] of sessionMap) {
     try {
-      const chatId = `mongo_${sessionId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40)}`;
+      const chatId = `mc_${shortHash(sessionId, 18)}`;
       const firstMsg = sessionMessages[0];
       const lastMsg = sessionMessages[sessionMessages.length - 1];
 
@@ -116,7 +121,7 @@ async function migrate() {
       // Insert messages
       for (let i = 0; i < sessionMessages.length; i++) {
         const msg = sessionMessages[i];
-        const msgId = `mongo_msg_${chatId}_${String(i).padStart(4, '0')}`;
+        const msgId = `mm_${shortHash(sessionId + '_' + i, 18)}`;
 
         // Map sender/role: MongoDB used 'user'/'bot', Supabase uses 'user'/'assistant'
         let role = msg.role || msg.sender || 'user';
