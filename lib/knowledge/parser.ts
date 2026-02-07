@@ -62,24 +62,17 @@ export async function parseDocument(
 }
 
 async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
-  const { PDFParse } = await import('pdf-parse');
-  const parser = new PDFParse({ data: buffer });
+  const { extractText, getDocumentProxy } = await import('unpdf');
+  const pdf = await getDocumentProxy(new Uint8Array(buffer));
+  const { totalPages, text } = await extractText(pdf, { mergePages: true });
 
-  try {
-    const textResult = await parser.getText();
-    const infoResult = await parser.getInfo();
-
-    return {
-      content: textResult.text,
-      metadata: {
-        pageCount: infoResult.total,
-        charCount: textResult.text.length,
-        title: infoResult.info?.Title as string | undefined,
-      },
-    };
-  } finally {
-    await parser.destroy();
-  }
+  return {
+    content: text,
+    metadata: {
+      pageCount: totalPages,
+      charCount: text.length,
+    },
+  };
 }
 
 function parseText(buffer: Buffer): ParsedDocument {
