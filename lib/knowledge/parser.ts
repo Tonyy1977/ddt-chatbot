@@ -64,13 +64,17 @@ export async function parseDocument(
 async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
   const { extractText, getDocumentProxy } = await import('unpdf');
   const pdf = await getDocumentProxy(new Uint8Array(buffer));
-  const { totalPages, text } = await extractText(pdf, { mergePages: true });
+  // mergePages: false returns string[] (one per page) — join with double
+  // newlines so the chunker can split on paragraph boundaries.
+  const { totalPages, text } = await extractText(pdf, { mergePages: false });
+  const pages = text as unknown as string[];
+  const content = pages.join('\n\n');
 
   return {
-    content: text,
+    content,
     metadata: {
       pageCount: totalPages,
-      charCount: text.length,
+      charCount: content.length,
     },
   };
 }
