@@ -1,0 +1,1048 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&display=swap');
+/* Chat toggle button */
+.chat-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #0078ff;
+  color: #fff;
+  font-size: 24px;
+  padding: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+/* Chat window wrapper */
+/* Default chatbox (desktop widget) */
+/* Default chatbox (desktop widget) */
+.chat-wrapper {
+  height: 100%;
+  position: fixed;
+  bottom: 40px;
+  right: 20px;
+  width: 350px;
+  height: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  z-index: 999;
+  transform: none !important;
+  zoom: 1 !important;
+  scale: 1 !important;
+  font-size: 16px !important;
+  min-width: 350px;
+  min-height: 500px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Chat box layout */
+.chat-box {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 6px 36px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+/* Header styling */
+.chat-header {
+  flex: 0 0 auto;
+  padding: 12px;
+  background: #0078FF;
+  color: white;
+  font-weight: bold;
+}
+
+/* Body scroll area */
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+/* Typing indicator */
+.typing-indicator {
+  height: 24px;
+  margin-left: 12px;
+  font-style: italic;
+  color: #555;
+  transition: opacity 0.3s;
+}
+
+.typing-indicator.hidden {
+  opacity: 0;
+}
+
+/* Bot vs user alignment */
+.bot-row { justify-content: flex-start; }
+.user-row { justify-content: flex-end; }
+
+/* Avatar */
+.avatar {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-top: 4px;
+  border: 1.5px solid #0078ff;   /* blue circle around avatar */
+}
+
+/* Message bubble container: auto-size to include timestamp */
+.message {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+/* Actual text within bubble */
+.message .message-text {
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+/* Timestamp inside bubble, aligned left */
+.message .timestamp {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #888; /* default grey for bot bubble */
+  align-self: flex-start;
+}
+
+/* Bubble styling (shared) */
+.bot-msg {
+font-family: 'Cormorant Garamond', serif;
+max-width: 75%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.user-msg {
+  font-family: 'Times New Roman', Times, serif;
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* User bubble */
+.user-msg {
+  background-color: #0084ff;
+  color: white;
+  border-bottom-right-radius: 0;
+}
+
+/* Bot bubble */
+.bot-msg {
+  background-color: #e4e6eb;
+  color: #000 !important;             /* bot text in black */
+  border-bottom-left-radius: 0;
+}
+
+/* Ensure inner text is also black */
+.bot-msg .message-text {
+  color: #000 !important;
+}
+
+/* Override timestamp color for user bubble */
+.user-msg .timestamp {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Follow-up buttons */
+.followup-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0 40px;
+  justify-content: flex-start;
+}
+
+.followup-btn {
+  background-color: #0078ff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.followup-btn:hover {
+  background-color: #005bb5;
+}
+
+/* Footer with input and send button */
+.chat-footer {
+  flex-shrink: 0;
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+  background: #fff;
+}
+
+.chat-footer input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 18px;
+  font-size: 14px;
+}
+
+.chat-footer button {
+  background: #0078ff;
+  color: white;
+  border: none;
+  padding: 0 16px;
+  font-size: 18px;
+  margin-left: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Welcome option buttons */
+.welcome-options {
+  display: flex;
+  flex-direction: column;       /* stack vertically */
+  align-items: flex-end;        /* align to right */
+  gap: 10px;
+  margin-top: 10px;
+  margin-right: 10px;           /* spacing from right side */
+}
+
+.welcome-btn {
+  background-color: #0078ff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.welcome-btn:hover {
+  background-color: #005bb5;
+}
+.chat-header {
+  background-color: #011638;
+  color: white;
+  padding: 12px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-avatar {
+  width: 48px;              /* adjust size if needed */
+  height: auto;
+  border-radius: 0;         /* removes any shape styling */
+  margin-right: 10px;
+  object-fit: contain;      /* keeps human ratio */
+  background: none;
+  box-shadow: none;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bot-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.ai-badge {
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+@keyframes fadeInBlur {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(0.9);
+  }
+  30% {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+  100% {
+    filter: blur(2px);
+    opacity: 0.6;
+  }
+}
+.avatar-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  cursor: pointer;
+}
+.avatar-toggle img {
+  width: 60px; /* or 36px for header if you prefer smaller */
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 50px; /* or 50% for circle */
+}
+
+/* Popup greeting animation */
+.popup-greeting {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  background: white; /* ⬅️ White background */
+  color: #000;        /* ⬅️ Black text */
+  padding: 12px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.15);
+  animation: fadeOut 3s ease-in-out forwards;
+  z-index: 999;
+}
+
+.popup-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.popup-message {
+  font-size: 14px;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(10px); visibility: hidden; }
+}
+.popup-message-row {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: fadeOut 3s ease-in-out forwards;
+  z-index: 999;
+}
+
+.popup-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 1.5px solid #0078ff;
+}
+
+.popup-message-bubble {
+  background: white;
+  color: black;
+  padding: 12px 16px;
+  border-radius: 18px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  font-size: 14px;
+  max-width: 260px;
+  line-height: 1.4;
+}
+.chat-content-card {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  overflow: hidden;
+}
+
+
+.message-text a {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.message-text a:hover {
+  text-decoration: none;
+}
+.option-box {
+  background-color: white;
+  color: #333;
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 999px; /* pill shape */
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+
+  /* 🔑 allow wrapping */
+  white-space: normal;       /* let text wrap */
+  word-break: break-word;    /* break long words if needed */
+  overflow-wrap: anywhere;   /* modern wrapping */
+
+  /* 🔑 keep it flexible but not endless */
+  max-width: 250px;          /* limit width inside chat */
+  display: inline-block;     /* still pill-like, not full row */
+}
+.option-box:hover {
+  background-color: #0078ff;
+  color: white;
+}
+
+.followup-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  margin: 10px 10px 0 0;
+}
+
+.followup-btn {
+  background-color: white;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.followup-btn:hover {
+  background-color: #0078ff;
+  color: white;
+}
+html, body, #root {
+  background: none !important; /* ← THIS is the real fix */
+  box-shadow: none !important;
+  border: none !important;
+}
+.chat-tabs {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #ccc;
+}
+
+.chat-tabs button {
+  flex: 1;
+  padding: 10px;
+  font-weight: bold;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-active {
+  border-bottom: 2px solid #011638;
+  color: #011638;
+}
+.home-tab-content {
+  background: linear-gradient(to bottom, #000428, #004e92);
+  padding: 16px;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.home-title {
+  font-weight: bold;
+  font-size: 20px;
+  padding: 0 8px;
+  margin: 0;
+  color: #011638;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.home-banner {
+  width: 100%;
+  height: auto;
+  border-radius: 12px 12px 0 0;
+  object-fit: cover;
+}
+
+.login-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.login-box input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.login-box button {
+  padding: 10px;
+  background-color: #0078ff;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.start-anon-btn {
+  margin: 0 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  cursor: pointer;
+}
+.home-tab-content, .home-title {
+  font-family: 'Cormorant Garamond', serif;
+}
+.tab-bar-custom {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 60px;
+  border-top: none; /* Remove any line */
+  background: transparent; /* Transparent to allow blur below */
+  backdrop-filter: blur(12px); /* Smooth glassy feel */
+  position: relative;
+  z-index: 2;
+}
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  font-size: 14px;
+  color: #777;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.tab-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.active-tab {
+  color: #0078ff;
+  font-weight: bold;
+}
+
+.active-tab .tab-icon {
+  font-size: 24px;
+}
+.chat-header-content h2 {
+  font-size: 22px;
+  color: white;
+  margin: 0;
+  font-weight: 700;
+}
+.sub-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  margin-top: 4px;
+}
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.avatar-row img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-left: 10px;
+}
+
+.user-initial-circle {
+  width: 44px;
+  height: 44px;
+  background-color: black;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  margin: 0;
+}
+.welcome-card button {
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+.welcome-buttons-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+.welcome-card {
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+.welcome-card input {
+  padding: 6px 10px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.welcome-card button {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.mini-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+}
+.home-tab-wrapper {
+  background: #E2E2E2 !important;
+  color: black !important;
+  flex: 1;
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.home-tab-wrapper h2 {
+  color: #011638;
+  margin-top: 24px;
+}
+
+.home-tab-wrapper .sub-text {
+  color: #d8d8d8;
+}
+
+.home-tab-wrapper .avatar-row img {
+  height: 30px;
+}
+
+.home-tab-wrapper .welcome-card {
+  background: white;
+  color: black;
+  padding: 16px;
+  border-radius: 16px;
+  margin-top: 24px;
+}
+.chat-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-body::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3); /* semi-transparent dark */
+  border-radius: 4px;
+}
+.message-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding: 0 12px;
+  gap: 10px;
+  padding-left: 0px;
+}
+.tab-icon {
+  width: 18px;
+  height: 18px;
+  margin-bottom: 4px;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  cursor: pointer;
+}
+.home-fade::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px; /* Adjust for longer fade */
+  background: linear-gradient(to bottom, rgba(0, 4, 40, 0), rgba(255, 255, 255, 0.7));
+  pointer-events: none;
+  z-index: 1;
+}
+.file-card-link {
+  text-decoration: none;
+}
+
+.file-card {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease;
+}
+
+.file-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.file-text .file-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: #000000;
+}
+
+.file-text .file-desc {
+  font-size: 14px;
+  color: #000000;
+}
+.home-tab-wrapper::after {
+  content: '';
+  position: fixed;
+  bottom: 60px; /* height of the tab bar */
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.01), #ffffff);
+  z-index: 999;
+  pointer-events: none;
+}
+.login-btn, .start-anon-btn {
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-weight: bold;
+  background: #011638;
+  color: white;
+}
+.welcome-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  gap: 10px;
+}
+.welcome-buttons button {
+  flex: 1;
+  padding: 8px 12px;
+  font-weight: bold;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #011638;
+  cursor: pointer;
+  color: white
+}
+.chat-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #000000;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 12px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.chat-close-btn:hover {
+  transform: scale(1.2);
+  color: #cccccc;
+}
+/* Apply Cormorant Garamond to greeting, subtitle, and input */
+.hello-username,
+.home-subtitle,
+.login-box input,
+.welcome-card input {
+  font-family: 'Cormorant Garamond', serif !important;
+}
+.welcome-card {
+  font-family: 'Cormorant Garamond', serif !important;
+}
+.welcome-card button,
+.start-anon-btn {
+  font-family: 'Cormorant Garamond', serif !important;
+}
+.file-text {
+  font-family: 'Cormorant Garamond', serif !important;
+}
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 10px 44px 10px 16px;  /* ← leave space for icon */
+  border: 1px solid #ccc;
+  border-radius: 24px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.input-wrapper button {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;       /* ✅ no blue box */
+  border: none;
+  padding: 6px;
+  border-radius: 50%;            /* optional: round click area */
+  cursor: pointer;
+}
+
+.send-arrow-btn {
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.send-arrow {
+  font-size: 20px;
+  color: #011638;
+  line-height: 1;
+}
+.send-arrow:hover {
+  color: #005bb5;
+}
+.booking-options,
+.time-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.booking-options .option-box,
+.time-slots .option-box {
+  background: white;
+  border: 1px solid #cbd5e1; /* light gray */
+  border-radius: 24px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.booking-options .option-box:hover,
+.time-slots .option-box:hover {
+  background: #f1f5f9;
+}
+.booking-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+}
+/* 🔹 Full-screen mode on mobile */
+@media (max-width: 768px) {
+  .chat-wrapper {
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+  }
+
+  .chat-box {
+    width: 100%;
+    height: 100%;
+    border-radius: 0 !important;
+  }
+
+  .chat-header {
+    border-radius: 0 !important;
+  }
+
+  .chat-body {
+    height: calc(100vh - 100px); /* header + footer accounted */
+  }
+}
+
+/* 🌍 Global */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;   /* ✅ dashboard scrolls */
+  background: #fff;   /* keep safe default */
+}
+
+/* 🤖 Chatbot isolation */
+.micah-chat {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;   /* ✅ only chatbot locks overflow */
+  background: none;
+}
+.booking-widget {
+  background: #fff;
+  border-radius: 16px;
+  padding: 12px;
+  width: 100%;            /* 👈 take full width of the chat bubble */
+  max-width: 100%;        /* 👈 no hard limit */
+  box-sizing: border-box; /* 👈 ensures padding is respected */
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* always 7 equal columns */
+  gap: 3px;
+  width: 100%;              /* stretch to parent bubble */
+  margin: 8px 0;
+}
+
+.calendar-day-name {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+}
+
+.calendar-day {
+  position: relative;
+  aspect-ratio: 1 / 1;      /* 👈 force perfect square cells */
+  width: 100%;              /* fill column space */
+  border: none;
+  border-radius: 50%;       /* keep circles */
+  font-size: 13px;
+  cursor: pointer;
+  background: #f9f9f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.calendar-day.disabled {
+  background: #eaeaea;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.calendar-day.available {
+  background: #fff;
+}
+
+.calendar-day.selected {
+  background: #011638;
+  color: #fff;
+}
+
+.time-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.time-slot {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
+  cursor: pointer;
+}
+
+.time-slot:hover {
+  background: #011638;
+  color: white;
+}
+.month-label {
+  font-size: 15px;
+}
+.nav-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.nav-buttons button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+.booking-options-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+  max-width: 100%;   /* lock within chat width */
+}
+
+.booking-option-btn {
+  display: block;
+  width: 250px;          /* or max-width */
+  white-space: normal;
+  word-break: break-word;
+  text-align: left;
+}
+
+
+.booking-option-btn:hover {
+  background: #f5f5f5;
+}

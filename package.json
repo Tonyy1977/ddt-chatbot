@@ -1,0 +1,51 @@
+{
+  "name": "chatbot-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.26",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.95.3",
+    "ai": "^6.0.75",
+    "axios": "^1.10.0",
+    "cheerio": "^1.2.0",
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.45.1",
+    "framer-motion": "^12.33.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.3",
+    "lucide-react": "^0.563.0",
+    "luxon": "^3.7.2",
+    "next": "^16.1.6",
+    "openai": "^5.23.0",
+    "pdf-parse": "^2.4.5",
+    "pg": "^8.18.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.1.0",
+    "uuid": "^11.1.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.8",
+    "eslint": "^9.36.0",
+    "eslint-config-next": "^16.1.6",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18"
+  }
+}
