@@ -3,16 +3,11 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
-// For Supabase: Use Session mode (port 5432) for better ORM compatibility
-let connectionString = process.env.DATABASE_URL!;
-if (connectionString?.includes('pooler.supabase.com') && connectionString.includes(':6543')) {
-  connectionString = connectionString.replace(':6543', ':5432');
-}
-
-// Singleton pool for connection reuse
+// Use Transaction mode (port 6543) for Supabase pooler — handles connection limits
 const pool = new Pool({
-  connectionString,
+  connectionString: process.env.DATABASE_URL!,
   ssl: { rejectUnauthorized: false },
+  max: 5,
 });
 
 export const db = drizzle(pool, { schema });

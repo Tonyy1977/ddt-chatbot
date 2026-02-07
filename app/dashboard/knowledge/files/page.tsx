@@ -121,11 +121,11 @@ export default function FilesPage() {
     const fileArray = Array.from(files);
     const validFiles = fileArray.filter((file) => {
       const ext = file.name.split('.').pop()?.toLowerCase();
-      return ['pdf', 'txt', 'md', 'doc', 'docx'].includes(ext || '');
+      return ['pdf', 'txt', 'md', 'docx'].includes(ext || '');
     });
 
     if (validFiles.length === 0) {
-      alert('Please upload PDF, TXT, MD, DOC, or DOCX files only');
+      alert('Please upload PDF, TXT, MD, or DOCX files only');
       return;
     }
 
@@ -178,7 +178,7 @@ export default function FilesPage() {
             <input
               type="file"
               multiple
-              accept=".pdf,.txt,.md,.doc,.docx"
+              accept=".pdf,.txt,.md,.docx"
               onChange={handleFileSelect}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
@@ -200,7 +200,7 @@ export default function FilesPage() {
               <p className="text-sm text-white/40 mb-6">or click anywhere to browse</p>
 
               <div className="flex items-center gap-2">
-                {['PDF', 'TXT', 'MD', 'DOC', 'DOCX'].map((format) => (
+                {['PDF', 'TXT', 'MD', 'DOCX'].map((format) => (
                   <span key={format} className="px-3 py-1.5 text-xs font-mono bg-white/5 border border-white/10 rounded-lg text-white/40">
                     {format}
                   </span>

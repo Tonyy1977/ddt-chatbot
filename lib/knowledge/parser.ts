@@ -15,7 +15,8 @@ export interface ParsedDocument {
 export type SupportedMimeType =
   | 'application/pdf'
   | 'text/plain'
-  | 'text/markdown';
+  | 'text/markdown'
+  | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -25,6 +26,7 @@ export function detectMimeType(fileName: string): SupportedMimeType | null {
     'pdf': 'application/pdf',
     'txt': 'text/plain',
     'md': 'text/markdown',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   };
   return mimeMap[ext || ''] || null;
 }
@@ -34,13 +36,13 @@ export function validateFile(file: { size: number; name: string }): { valid: boo
     return { valid: false, error: `File exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit` };
   }
   if (!detectMimeType(file.name)) {
-    return { valid: false, error: 'Unsupported file type. Use PDF, TXT, or MD.' };
+    return { valid: false, error: 'Unsupported file type. Use PDF, TXT, MD, or DOCX.' };
   }
   return { valid: true };
 }
 
 export function isSupported(mimeType: string): mimeType is SupportedMimeType {
-  return ['application/pdf', 'text/plain', 'text/markdown'].includes(mimeType);
+  return ['application/pdf', 'text/plain', 'text/markdown', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(mimeType);
 }
 
 export async function parseDocument(
@@ -53,6 +55,8 @@ export async function parseDocument(
     case 'text/plain':
     case 'text/markdown':
       return parseText(buffer);
+    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+      return parseDOCX(buffer);
     default:
       throw new Error(`Unsupported mime type: ${mimeType}`);
   }
@@ -81,6 +85,19 @@ async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
 
 function parseText(buffer: Buffer): ParsedDocument {
   const content = buffer.toString('utf-8');
+  return {
+    content,
+    metadata: {
+      charCount: content.length,
+    },
+  };
+}
+
+async function parseDOCX(buffer: Buffer): Promise<ParsedDocument> {
+  const mammoth = await import('mammoth');
+  const result = await mammoth.convertToHtml({ buffer });
+  const $ = cheerio.load(result.value);
+  const content = $('body').text().replace(/\s+/g, ' ').trim();
   return {
     content,
     metadata: {

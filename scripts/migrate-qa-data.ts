@@ -2,11 +2,13 @@
 // Migrates existing qaData.js Q&A pairs into the knowledge_sources + document_chunks tables
 // Usage: npx tsx scripts/migrate-qa-data.ts
 
-import { db, knowledgeSources, documentChunks } from '../db';
-import { generateEmbeddings } from '../lib/knowledge/embeddings';
 import * as dotenv from 'dotenv';
-
 dotenv.config({ path: '.env.local' });
+
+// Use dynamic imports so env vars are loaded before db/index.ts creates the Pool
+const { db, knowledgeSources, documentChunks } = await import('../db');
+const { generateEmbeddings } = await import('../lib/knowledge/embeddings');
+const { eq } = await import('drizzle-orm');
 
 // Import qaData - the format is:
 // { question: string[], keywords?: string[], answer: string[], followUps?: Record<string, string|string[]> }
@@ -326,7 +328,7 @@ async function migrateQAData() {
             charCount: embeddingText.length,
           },
         })
-        .where(require('drizzle-orm').eq(knowledgeSources.id, knowledgeSourceId));
+        .where(eq(knowledgeSources.id, knowledgeSourceId));
 
       successCount++;
       console.log(`  [${i + 1}/${qaData.length}] ✓ "${title}"`);

@@ -327,7 +327,7 @@ export function validateFile(file: { size: number; name: string }): { valid: boo
   }
 
   const ext = file.name.split('.').pop()?.toLowerCase();
-  const allowedTypes = ['pdf', 'txt', 'md', 'doc', 'docx'];
+  const allowedTypes = ['pdf', 'txt', 'md', 'docx'];
   if (!ext || !allowedTypes.includes(ext)) {
     return { valid: false, error: `Unsupported file type. Allowed: ${allowedTypes.join(', ')}` };
   }
