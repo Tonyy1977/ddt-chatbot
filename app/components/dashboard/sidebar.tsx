@@ -16,6 +16,7 @@ import {
   Activity,
   Shield,
   User,
+  UserPlus,
   FileText,
   AlignLeft,
   Globe,
@@ -49,6 +50,7 @@ function buildNavigation(): NavSection[] {
       defaultOpen: true,
       items: [
         { label: 'Chat History', href: '/dashboard/history', icon: <History className="w-5 h-5" /> },
+        { label: 'Leads', href: '/dashboard/leads', icon: <UserPlus className="w-5 h-5" /> },
       ],
     },
     {

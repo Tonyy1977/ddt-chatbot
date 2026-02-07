@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu, X, LayoutDashboard, History, ChevronDown, ChevronRight,
-  Sparkles, BarChart3, Activity, Shield, FileText, AlignLeft, Globe, MessageCircleQuestion,
+  Sparkles, BarChart3, Activity, Shield, UserPlus, FileText, AlignLeft, Globe, MessageCircleQuestion,
 } from 'lucide-react';
 
 interface NavItem { label: string; href: string; icon: React.ReactNode; }
@@ -59,6 +59,7 @@ function buildNavigation(): NavSection[] {
       title: 'Activities', defaultOpen: true,
       items: [
         { label: 'Chat History', href: '/dashboard/history', icon: <History className="w-5 h-5" /> },
+        { label: 'Leads', href: '/dashboard/leads', icon: <UserPlus className="w-5 h-5" /> },
       ],
     },
     {

@@ -69,6 +69,24 @@ export const knowledgeSources = pgTable('knowledge_sources', {
 }));
 
 // ============================================
+// LEADS (Captured from chat conversations)
+// ============================================
+export const leads = pgTable('leads', {
+  id: varchar('id', { length: 50 }).primaryKey(),
+  chatId: varchar('chat_id', { length: 50 }).references(() => chats.id, { onDelete: 'set null' }),
+  name: text('name'),
+  email: text('email'),
+  phone: text('phone'),
+  source: varchar('source', { length: 50 }).notNull().default('chat'),
+  status: varchar('status', { length: 20 }).notNull().default('new'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  chatIdx: index('leads_chat_idx').on(table.chatId),
+  createdAtIdx: index('leads_created_at_idx').on(table.createdAt),
+  emailIdx: index('leads_email_idx').on(table.email),
+}));
+
+// ============================================
 // DOCUMENT CHUNKS (with vector embedding + full-text search)
 // ============================================
 export const documentChunks = pgTable('document_chunks', {

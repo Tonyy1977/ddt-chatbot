@@ -1,6 +1,6 @@
 // db/operations.ts - Database operations for DDT Chatbot
 import { db } from './index';
-import { chats, messages } from './schema';
+import { chats, messages, leads } from './schema';
 import { eq, desc, sql, asc, count } from 'drizzle-orm';
 import crypto from 'crypto';
 
@@ -119,5 +119,72 @@ export const MessageOperations = {
       botMessages: botResult[0]?.count || 0,
       uniqueSessions: sessionResult[0]?.count || 0,
     };
+  },
+};
+
+// ============================================
+// LEAD OPERATIONS
+// ============================================
+export const LeadOperations = {
+  async create(data: {
+    chatId?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+  }) {
+    const id = `lead_${generateId()}`;
+    const [created] = await db
+      .insert(leads)
+      .values({
+        id,
+        chatId: data.chatId || null,
+        name: data.name || null,
+        email: data.email || null,
+        phone: data.phone || null,
+        status: 'new',
+      })
+      .returning();
+    return created;
+  },
+
+  async getAll() {
+    return db
+      .select({
+        id: leads.id,
+        chatId: leads.chatId,
+        name: leads.name,
+        email: leads.email,
+        phone: leads.phone,
+        source: leads.source,
+        status: leads.status,
+        createdAt: leads.createdAt,
+      })
+      .from(leads)
+      .orderBy(desc(leads.createdAt));
+  },
+
+  async findByEmail(email: string) {
+    return db
+      .select()
+      .from(leads)
+      .where(eq(leads.email, email))
+      .limit(1);
+  },
+
+  async findByPhone(phone: string) {
+    const digits = phone.replace(/\D/g, '');
+    const result = await db.execute(
+      sql`SELECT * FROM leads WHERE regexp_replace(phone, '[^0-9]', '', 'g') = ${digits} LIMIT 1`
+    );
+    return result.rows;
+  },
+
+  async updateById(id: string, data: { name?: string; email?: string; phone?: string }) {
+    const [updated] = await db
+      .update(leads)
+      .set(data)
+      .where(eq(leads.id, id))
+      .returning();
+    return updated;
   },
 };
