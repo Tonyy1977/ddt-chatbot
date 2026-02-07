@@ -64,11 +64,11 @@ function buildNavigation(): NavSection[] {
   ];
 }
 
-function NavSectionComponent({ section, pathname }: { section: NavSection; pathname: string }) {
+function NavSectionComponent({ section, pathname }: { section: NavSection; pathname: string | null }) {
   const [isOpen, setIsOpen] = React.useState(section.defaultOpen ?? true);
 
   const hasActiveItem = section.items.some(
-    (item) => pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+    (item) => pathname === item.href || (item.href !== '/dashboard' && (pathname ?? '').startsWith(item.href))
   );
 
   React.useEffect(() => {
@@ -97,7 +97,7 @@ function NavSectionComponent({ section, pathname }: { section: NavSection; pathn
             className="space-y-1 mt-1 overflow-hidden"
           >
             {section.items.map((item) => {
-              const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+              const isActive = pathname === item.href || (item.href !== '/dashboard' && (pathname ?? '').startsWith(item.href));
 
               return (
                 <Link

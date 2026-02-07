@@ -73,9 +73,9 @@ function buildNavigation(): NavSection[] {
   ];
 }
 
-function NavSectionComponent({ section, pathname, onNavigate }: { section: NavSection; pathname: string; onNavigate: () => void }) {
+function NavSectionComponent({ section, pathname, onNavigate }: { section: NavSection; pathname: string | null; onNavigate: () => void }) {
   const [isOpen, setIsOpen] = React.useState(section.defaultOpen ?? true);
-  const hasActiveItem = section.items.some(item => pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)));
+  const hasActiveItem = section.items.some(item => pathname === item.href || (item.href !== '/dashboard' && (pathname ?? '').startsWith(item.href)));
   React.useEffect(() => { if (hasActiveItem) setIsOpen(true); }, [hasActiveItem]);
 
   return (
@@ -88,7 +88,7 @@ function NavSectionComponent({ section, pathname, onNavigate }: { section: NavSe
         {isOpen && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} className="space-y-1 mt-1 overflow-hidden">
             {section.items.map(item => {
-              const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+              const isActive = pathname === item.href || (item.href !== '/dashboard' && (pathname ?? '').startsWith(item.href));
               return (
                 <Link key={item.href} href={item.href} onClick={onNavigate}
                   className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30' : 'text-[#C9CDD6]/60 hover:bg-white/[0.03] hover:text-white border border-transparent'}`}>
