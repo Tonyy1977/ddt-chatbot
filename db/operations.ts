@@ -1,6 +1,6 @@
 // db/operations.ts - Database operations for DDT Chatbot
 import { db } from './index';
-import { chats, messages, leads } from './schema';
+import { chats, messages, leads, tenantVerifications, buildiumWebhookEvents } from './schema';
 import { eq, desc, sql, asc, count } from 'drizzle-orm';
 import crypto from 'crypto';
 
@@ -184,6 +184,79 @@ export const LeadOperations = {
       .update(leads)
       .set(data)
       .where(eq(leads.id, id))
+      .returning();
+    return updated;
+  },
+};
+
+// ============================================
+// TENANT VERIFICATION OPERATIONS
+// ============================================
+export const TenantVerificationOperations = {
+  async create(data: {
+    chatId: string;
+    buildiumTenantId: string;
+    buildiumLeaseId: string;
+    verifiedEmail?: string | null;
+    verifiedPhone?: string | null;
+  }) {
+    const id = generateId();
+    const [created] = await db.insert(tenantVerifications).values({
+      id,
+      chatId: data.chatId,
+      buildiumTenantId: data.buildiumTenantId,
+      buildiumLeaseId: data.buildiumLeaseId,
+      verifiedEmail: data.verifiedEmail || null,
+      verifiedPhone: data.verifiedPhone || null,
+    }).returning();
+    return created;
+  },
+
+  async getByChatId(chatId: string) {
+    const [result] = await db
+      .select()
+      .from(tenantVerifications)
+      .where(eq(tenantVerifications.chatId, chatId))
+      .orderBy(desc(tenantVerifications.verifiedAt))
+      .limit(1);
+    return result || null;
+  },
+};
+
+// ============================================
+// BUILDIUM WEBHOOK EVENT OPERATIONS
+// ============================================
+export const WebhookEventOperations = {
+  async create(data: {
+    eventType: string;
+    resourceId?: string;
+    payload: any;
+  }) {
+    const id = generateId();
+    const [created] = await db.insert(buildiumWebhookEvents).values({
+      id,
+      eventType: data.eventType,
+      resourceId: data.resourceId || null,
+      payload: data.payload,
+      status: 'received',
+    }).returning();
+    return created;
+  },
+
+  async markProcessed(id: string) {
+    const [updated] = await db
+      .update(buildiumWebhookEvents)
+      .set({ status: 'processed', processedAt: new Date() })
+      .where(eq(buildiumWebhookEvents.id, id))
+      .returning();
+    return updated;
+  },
+
+  async markFailed(id: string) {
+    const [updated] = await db
+      .update(buildiumWebhookEvents)
+      .set({ status: 'failed' })
+      .where(eq(buildiumWebhookEvents.id, id))
       .returning();
     return updated;
   },

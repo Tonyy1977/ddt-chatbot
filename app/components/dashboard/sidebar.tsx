@@ -21,6 +21,7 @@ import {
   AlignLeft,
   Globe,
   MessageCircleQuestion,
+  Bot,
 } from 'lucide-react';
 
 interface NavItem {
@@ -43,6 +44,7 @@ function buildNavigation(): NavSection[] {
       items: [
         { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
         { label: 'Analytics', href: '/dashboard/analytics', icon: <BarChart3 className="w-5 h-5" /> },
+        { label: 'Assistant', href: '/dashboard/assistant', icon: <Bot className="w-5 h-5" /> },
       ],
     },
     {

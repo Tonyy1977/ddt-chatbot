@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/rent-reminders",
+      "schedule": "0 9 25 * *"
+    },
+    {
+      "path": "/api/cron/late-notices",
+      "schedule": "0 9 5 * *"
+    }
+  ]
+}

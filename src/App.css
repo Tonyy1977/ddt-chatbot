@@ -397,6 +397,42 @@ max-width: 75%;
 .message-text a:hover {
   text-decoration: none;
 }
+
+/* Markdown tables in bot messages */
+.bot-msg:has(table) {
+  max-width: 95%;
+}
+
+.bot-msg table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 13px;
+  white-space: normal;
+  overflow-x: auto;
+  display: block;
+}
+
+.bot-msg th,
+.bot-msg td {
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.bot-msg th {
+  background-color: #011638;
+  color: white;
+  font-weight: 600;
+}
+
+.bot-msg tr:nth-child(even) {
+  background-color: #f5f5f5;
+}
+
+.bot-msg tr:hover {
+  background-color: #e8f0fe;
+}
 .option-box {
   background-color: white;
   color: #333;

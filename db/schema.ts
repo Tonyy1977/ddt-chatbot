@@ -102,3 +102,38 @@ export const documentChunks = pgTable('document_chunks', {
 }, (table) => ({
   ksIdx: index('chunks_ks_idx').on(table.knowledgeSourceId),
 }));
+
+// ============================================
+// TENANT VERIFICATIONS (Buildium identity mapping)
+// ============================================
+export const tenantVerifications = pgTable('tenant_verifications', {
+  id: varchar('id', { length: 50 }).primaryKey(),
+  chatId: varchar('chat_id', { length: 50 }).notNull().references(() => chats.id, { onDelete: 'cascade' }),
+  buildiumTenantId: varchar('buildium_tenant_id', { length: 50 }).notNull(),
+  buildiumLeaseId: varchar('buildium_lease_id', { length: 50 }),
+  verifiedEmail: varchar('verified_email', { length: 255 }),
+  verifiedPhone: varchar('verified_phone', { length: 50 }),
+  verifiedAt: timestamp('verified_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at'),
+  metadata: jsonb('metadata').notNull().default({}),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  chatIdx: index('tv_chat_idx').on(table.chatId),
+  tenantIdx: index('tv_tenant_idx').on(table.buildiumTenantId),
+}));
+
+// ============================================
+// BUILDIUM WEBHOOK EVENTS (audit + idempotency)
+// ============================================
+export const buildiumWebhookEvents = pgTable('buildium_webhook_events', {
+  id: varchar('id', { length: 50 }).primaryKey(),
+  eventType: varchar('event_type', { length: 100 }).notNull(),
+  resourceId: varchar('resource_id', { length: 100 }),
+  payload: jsonb('payload').notNull(),
+  processedAt: timestamp('processed_at'),
+  status: varchar('status', { length: 20 }).notNull().default('received'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  eventTypeIdx: index('bwe_event_type_idx').on(table.eventType),
+  statusIdx: index('bwe_status_idx').on(table.status),
+}));

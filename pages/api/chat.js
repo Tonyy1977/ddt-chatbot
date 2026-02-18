@@ -1,7 +1,11 @@
 // pages/api/chat.js
 import { ChatOperations, MessageOperations, LeadOperations } from '../../db/operations.ts';
 import { retrieveContext, augmentSystemPrompt } from '../../lib/knowledge/retriever.ts';
+import { PUBLIC_TOOLS } from '../../lib/buildium/tools.ts';
+import { executePublicTool } from '../../lib/buildium/tool-executor.ts';
 import axios from 'axios';
+
+const MAX_TOOL_ITERATIONS = 5;
 
 export const config = {
   api: {
@@ -346,6 +350,15 @@ owner right away. Expect a call back shortly!"
 - NEVER use em dashes or en dashes in your responses. They are a telltale sign of AI-generated text.
 - Instead, use commas, periods, colons, or parentheses to break up sentences.
 - Write the way a friendly human colleague would in a chat: short, clear sentences with simple punctuation.
+
+### Buildium Tenant Services
+You can help tenants check their rent balance, view payment history, get lease info, and submit maintenance requests through the Buildium property management system.
+Before accessing any tenant data, you MUST verify their identity first. Ask for their email address or phone number, then call verify_tenant_identity.
+If verification fails, politely ask them to double-check their information or contact the office directly.
+After verification succeeds, use the available tools to help them with their request.
+NEVER expose internal Buildium IDs (tenant IDs, lease IDs, etc.) to the user. Always present information in a friendly, readable format.
+Format dollar amounts properly (e.g. $1,200.00). Format dates in a readable way (e.g. "March 1, 2025").
+NEVER use markdown tables. They do not render in this chat. Instead, present data as a brief summary or clean bullet points. Keep responses concise and conversational.
 `;
 
     // 5b) RAG: Retrieve relevant context and augment system prompt
@@ -366,22 +379,59 @@ owner right away. Expect a call back shortly!"
       ...historyMessages,
     ];
 
-    // 6) Send to OpenAI
-    openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: body.model,
-        messages: messagesForOpenAI,
-      }),
-    });
+    // 6) Send to OpenAI with Buildium tool-calling loop
+    const hasBuildiumKeys = process.env.BUILDIUM_CLIENT_ID && process.env.BUILDIUM_CLIENT_SECRET;
+    const toolsPayload = hasBuildiumKeys ? { tools: PUBLIC_TOOLS, tool_choice: 'auto' } : {};
 
-    data = await openaiRes.json();
+    let currentMessages = [...messagesForOpenAI];
+    let botMsg = '';
+    let iterations = 0;
 
-    let botMsg = data.choices?.[0]?.message?.content;
+    while (iterations < MAX_TOOL_ITERATIONS) {
+      iterations++;
+
+      openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: body.model,
+          messages: currentMessages,
+          ...toolsPayload,
+        }),
+      });
+
+      data = await openaiRes.json();
+      const choice = data.choices?.[0];
+      if (!choice) break;
+
+      const assistantMessage = choice.message;
+      currentMessages.push(assistantMessage);
+
+      // If no tool calls, we have the final text response
+      if (choice.finish_reason === 'stop' || !assistantMessage.tool_calls?.length) {
+        botMsg = assistantMessage.content || '';
+        break;
+      }
+
+      // Execute each tool call and feed results back
+      for (const toolCall of assistantMessage.tool_calls) {
+        const fnName = toolCall.function.name;
+        let fnArgs = {};
+        try { fnArgs = JSON.parse(toolCall.function.arguments); } catch {}
+
+        const result = await executePublicTool(fnName, fnArgs, chat.id);
+        console.log(`Tool call: ${fnName}(${JSON.stringify(fnArgs)}) → success=${result.success}`);
+
+        currentMessages.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: JSON.stringify(result),
+        });
+      }
+    }
 
     // Year-normalization guardrail
     if (botMsg) {
